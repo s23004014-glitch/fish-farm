@@ -137,7 +137,7 @@ export default function Home() {
               </h1>
               <p className="hero-subtext mt-5 max-w-md text-base leading-relaxed text-[rgba(245,239,225,0.75)] md:text-lg">
                 Browse live inventory straight from trusted fish farms, watch stock update
-                the moment it changes, and get healthy fish delivered with care.
+                the moment it changes, and get what you want ornerment fish.
               </p>
               <div className="hero-but mt-8 flex flex-wrap gap-3">
                 <a href="#catalog" className="hero-cta btn-primary">
@@ -237,7 +237,7 @@ export default function Home() {
           ) : fish.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[rgba(11,32,48,0.15)] bg-[rgba(255,255,255,0.6)] px-6 py-14 text-center">
               <p className="font-display text-lg font-semibold text-[var(--color-ink)]">The catalog is empty right now</p>
-              <p className="mt-2 text-sm text-[var(--color-ink-soft)]">Check back soon, or ask an admin to add listings.</p>
+              <p className="mt-2 text-sm text-[var(--color-ink-soft)]">Check back soon, or request new listings.</p>
             </div>
           ) : (
             <div className="rounded-2xl border border-dashed border-[rgba(11,32,48,0.15)] bg-[rgba(255,255,255,0.6)] px-6 py-14 text-center">
