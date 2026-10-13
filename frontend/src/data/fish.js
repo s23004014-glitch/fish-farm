@@ -12,7 +12,7 @@ export const fishData = [
     name: "Crimson Betta",
     species: "Betta splendens",
     farm: "Coral Bay Hatchery",
-    price: 18.5,
+    price: 100,
     stock: "In stock",
     color: "#E23E57",
     description:
@@ -25,7 +25,7 @@ export const fishData = [
     name: "Neon Tetra Shoal",
     species: "Paracheirodon innesi",
     farm: "Tidewater Farms",
-    price: 6.25,
+    price: 600,
     stock: "In stock",
     color: "#2FB6C4",
     description:
@@ -38,7 +38,7 @@ export const fishData = [
     name: "Blue Discus",
     species: "Symphysodon aequifasciatus",
     farm: "Blue Horizon Aquafarm",
-    price: 42.0,
+    price: 400,
     stock: "Low stock",
     color: "#F2A65A",
     description:
@@ -51,7 +51,7 @@ export const fishData = [
     name: "Koi Butterfly",
     species: "Cyprinus rubrofuscus",
     farm: "Lagoon Breeders Co.",
-    price: 65.0,
+    price: 600,
     stock: "In stock",
     color: "#F4B860",
     description:
@@ -64,7 +64,7 @@ export const fishData = [
     name: "Ocellaris Clownfish",
     species: "Amphiprion ocellaris",
     farm: "Reeftrail Aquaculture",
-    price: 24.5,
+    price: 200,
     stock: "Sold out",
     color: "#FF6B4A",
     description:
@@ -77,7 +77,7 @@ export const fishData = [
     name: "Silver Angelfish",
     species: "Pterophyllum scalare",
     farm: "Mistvale Fisheries",
-    price: 12.0,
+    price: 100,
     stock: "In stock",
     color: "#8E7DBE",
     description:
@@ -90,7 +90,7 @@ export const fishData = [
     name: "Endler Guppy Pair",
     species: "Poecilia wingei",
     farm: "Sunspire Hatchery",
-    price: 4.75,
+    price: 400,
     stock: "In stock",
     color: "#5FA8D3",
     description:
@@ -103,7 +103,7 @@ export const fishData = [
     name: "Tiger Oscar",
     species: "Astronotus ocellatus",
     farm: "Northshoal Farms",
-    price: 38.0,
+    price: 300,
     stock: "Low stock",
     color: "#B5651D",
     description:

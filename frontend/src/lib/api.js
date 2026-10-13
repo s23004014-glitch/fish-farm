@@ -1,9 +1,9 @@
-import React from 'react'
+// import React from 'react'
 
-const api = () => {
-  return (
-    <div>api</div>
-  )
-}
+// const api = () => {
+//   return (
+//     <div>api</div>
+//   )
+// }
 
-export default api
+// export default api
