@@ -6,34 +6,38 @@
 /* Design tokens — shared across every page of AquaPulse              */
 /* ------------------------------------------------------------------ */
 :root {
-  --color-abyss: #071b2b;        /* deep-sea navy — header / hero bg   */
-  --color-reef: #0f5c66;         /* primary teal                       */
-  --color-reef-light: #1b7a85;
-  --color-coral: #ff6b4a;        /* accent — coral reef orange         */
-  --color-coral-light: #ff8a6b;
-  --color-sand: #0e3a52;         /* warm sand — light backgrounds      */
-  --color-seafoam: #7fd9c4;      /* secondary accent / success         */
-  --color-ink: #0b2030;          /* body text on light backgrounds     */
-  --color-ink-soft: #4a5d68;     /* muted / secondary text             */
+  --color-abyss: #062a3b;        /* deep-sea teal-navy (dark sections) */
+  --color-reef: #0d6b75;         /* primary teal                       */
+  --color-reef-light: #1b8a94;
+  --color-coral: #f4623a;        /* accent                             */
+  --color-coral-light: #ff8560;
+  --color-sand: #e6f6f4;         /* light foam text on dark sections   */
+  --color-seafoam: #6fe0c8;      /* secondary accent / success         */
+  --color-ink: #0a2433;          /* body text on light backgrounds     */
+  --color-ink-soft: #4a6270;     /* muted text                         */
 
   --font-display: 'Fraunces', ui-serif, serif;
   --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-/* ------------------------------------------------------------------ */
-/* Base                                                                */
-/* ------------------------------------------------------------------ */
 html {
   scroll-behavior: smooth;
 }
 
-/* body {
-  background-color: var(--color-sand);
+/* One site-wide background: soft ocean-mist gradient */
+body {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #eefaf8 0%, #d6f1ef 45%, #c2e6ee 100%) fixed;
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
-} */
+}
+
+/* Gradient for every dark section (navbar, banners, stats, visual panels) */
+[class*="bg-[var(--color-abyss)]"] {
+  background-image: linear-gradient(135deg, #062a3b 0%, #0a4a5c 55%, #0d6b75 100%);
+}
 
 h1,
 h2,
@@ -44,7 +48,7 @@ h4 {
 
 ::selection {
   background: var(--color-coral);
-  color: var(--color-sand);
+  color: #fff;
 }
 
 :focus-visible {
@@ -52,13 +56,12 @@ h4 {
   outline-offset: 2px;
 }
 
-/* Scrollbar (webkit) */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-sand);
+  background: #d6f1ef;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-reef);
@@ -130,8 +133,8 @@ h4 {
   .bubble {
     animation: bubble-rise 3.2s ease-in infinite;
     border-radius: 9999px;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(126,249,255,0.12));
-    border: 1px solid rgba(255,255,255,0.25);
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(27,138,148,0.18));
+    border: 1px solid rgba(27,138,148,0.35);
     pointer-events: none;
   }
   

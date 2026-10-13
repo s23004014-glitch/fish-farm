@@ -84,7 +84,7 @@ export default function About() {
   return (
     <>
       <Navbar />
-      <main className="bg-[#0e3a52]">
+      <main>
         {/* ---------------- Banner ---------------- */}
         <section ref={bannerRef} className="bg-[var(--color-abyss)] py-16 text-[var(--color-sand)] md:py-20">
           <div className="mx-auto max-w-3xl px-5 text-center md:px-8">
