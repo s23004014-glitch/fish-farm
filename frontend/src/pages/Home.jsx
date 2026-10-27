@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import { fishData } from "../data/fish";
 import heroFish from "../assets/hero.png"; // adjust path to wherever hero.png actually lives
 import Bubbole from "../components/Bubbole";
+import koiFish from "../assets/koi-fish.mp4";
 
 gsap.registerPlugin(useGSAP);
 /* ------------------------------------------------------------------ */
@@ -52,7 +53,7 @@ function FishCard({ fish }) {
         <div className="mt-auto flex items-center justify-between pt-3">
 
           <span className="font-data text-sm font-semibold text-white">
-            ${fish.price.toFixed(2)}
+            Rs {fish.price.toFixed(2)}
           </span>
           <span className="text-xs font-semibold text-[var(--color-coral)] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
             View details →
@@ -122,53 +123,48 @@ export default function Home() {
         {/* ---------------- Hero ---------------- */}
         <section
           ref={heroRef}
-          className="relative overflow-hidden bg-[#393a9a] pb-20 text-[var(--color-sand)] md:pb-20"
+          className="relative flex h-[85vh] max-h-[760px] min-h-[520px] items-center overflow-hidden"
         >
-          <div className="glow-orb absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full" />
-          <div className="glow-orb absolute top-1/3 -right-40 w-[560px] h-[560px] rounded-full" style={{ animationDelay: '2s' }} />
-          <Bubbole count={14} />
-          <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-5 md:grid-cols-2 md:gap-12 md:px-8">
-            <div>
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+          >
+            <source src={koiFish} type="video/mp4" />
+          </video>
+
+          {/* Darkens the left side (where the text sits) regardless of where
+              the koi is mid-loop, while keeping the video visible overall. */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(7,27,43,0.82) 0%, rgba(7,27,43,0.55) 45%, rgba(7,27,43,0.2) 75%, rgba(7,27,43,0.05) 100%)",
+            }}
+            aria-hidden="true"
+          />
+
+          <div className="relative z-10 mx-auto w-full max-w-6xl px-5 md:px-8">
+            <div className="max-w-lg text-[var(--color-sand)]">
               <span className="hero-eyebrow text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-coral)]">
                 Farm-direct aquatics
               </span>
               <h1 className="hero-heading mt-4 text-4xl font-semibold leading-[1.1] md:text-5xl lg:text-6xl">
-                buy <span className="text-shimmer">what you want.</span>
+                buy <span className="text-[var(--color-coral)]">what you want.</span>
               </h1>
-              <p className="hero-subtext mt-5 max-w-md text-base leading-relaxed text-[rgba(245,239,225,0.75)] md:text-lg">
+              <p className="hero-subtext mt-5 max-w-md text-base leading-relaxed text-[rgba(245,239,225,0.85)] md:text-lg">
                 Browse live inventory straight from trusted fish farms, watch stock update
                 the moment it changes, and get what you want ornerment fish.
               </p>
-              <div className="hero-but mt-8 flex flex-wrap gap-3">
+              <div className="mt-8 flex flex-wrap gap-3">
                 <a href="#catalog" className="hero-cta btn-primary">
                   Browse the catalog
                 </a>
                 <Link to="/auth" className="hero-cta btn-outline">
                   Become a buyer
                 </Link>
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-center">
-              <span
-                className="pulse-ring absolute h-56 w-56 rounded-full border border-[rgba(255,107,74,0.4)] md:h-72 md:w-72"
-                aria-hidden="true"
-              />
-              <span
-                className="pulse-ring absolute h-56 w-56 rounded-full border border-[rgba(255,107,74,0.4)] [animation-delay:1.1s] md:h-72 md:w-72"
-                aria-hidden="true"
-              />
-              <div ref={fishWrapRef} className="relative">
-                <div ref={fishWrapRef} className="relative">
-                  <div ref={fishWrapRef} className="relative">
-                    <img
-                      ref={fishBodyRef}
-                      src={heroFish}
-                      alt="Featured fish"
-                      className="h-[40rem] w-[40rem] object-contain drop-shadow-[0_20px_30px_rgba(15,92,102,0.35)]"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
