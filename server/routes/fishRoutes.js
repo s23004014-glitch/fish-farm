@@ -17,7 +17,7 @@ const router = express.Router();
 router.get("/", getFish);
 router.get("/:id", getFishById);
 
-// Only admin can add, edit, delete (order: login check, role check, upload, validate)
+// Only admin can add, edit, delete
 router.post("/", protect, adminOnly, upload.single("image"), validate(fishSchema), createFish);
 router.put("/:id", protect, adminOnly, upload.single("image"), validate(fishUpdateSchema), updateFish);
 router.delete("/:id", protect, adminOnly, deleteFish);
