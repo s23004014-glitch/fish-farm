@@ -1,188 +1,149 @@
-import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { gsap } from "gsap";
-import Navbar from "../components/Navbar";
-import Bubbole from "../components/Bubbole";
+import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
+import api, { getErrorMessage } from "../api/axios.js";
+import { gsap, useGSAP, prefersReducedMotion } from "../lib/gsap.js";
+import RequestForm from "../components/RequestForm.jsx";
+import Reveal from "../components/Reveal.jsx";
+import { FARM } from "../config.js";
 
-/* ------------------------------------------------------------------ */
-/* Small inline line icons — no external icon library needed          */
-/* ------------------------------------------------------------------ */
-function CatalogIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="1.5" />
-      <rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" />
-      <rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  );
-}
-
-function PulseIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M2 12h4l2 6 4-12 2 6h8" />
-    </svg>
-  );
-}
-
-function DeliveryIcon(props) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M21 8l-9-5-9 5 9 5 9-5Z" />
-      <path d="M3 8v8l9 5 9-5V8" />
-      <path d="M12 13v8" />
-    </svg>
-  );
-}
-
-const pillars = [
-  {
-    icon: CatalogIcon,
-    title: "Farm-direct sourcing",
-    body: "Every listing traces back to a certified farm, not a warehouse. You see the species, the breeder, and the batch before you buy.",
-  },
-  {
-    icon: PulseIcon,
-    title: "Live stock, live pulse",
-    body: "Stock levels update the moment they change on the farm side, so the number on your screen is the number in the tank.",
-  },
-  {
-    icon: DeliveryIcon,
-    title: "Careful delivery",
-    body: "Orders are packed and shipped by people who know fish, with routes chosen to keep transit time — and stress — as low as possible.",
-  },
-];
-
-const steps = [
-  { title: "Browse the live catalog", body: "Filter by name or species and see real-time stock straight from the farm." },
-  { title: "Place your order", body: "Add a fish to your order, choose shipping, and check out securely." },
-  { title: "We validate stock", body: "Before anything ships, we confirm the fish is still available — no surprise cancellations." },
-  { title: "The farm ships direct", body: "Your order leaves the farm in temperature-controlled, oxygenated packaging." },
-];
-
-const stats = [
-  { value: "48+", label: "Partner farms" },
-  { value: "320+", label: "Species tracked" },
-  { value: "12,000+", label: "Orders shipped" },
-  { value: "98%", label: "Stock accuracy" },
+const highlights = [
+  { icon: "🐟", title: "Healthy fish", text: "Every fish is raised with care and checked before it leaves the farm." },
+  { icon: "📦", title: "Safe delivery", text: "Fish are packed with oxygen and delivered carefully to your door." },
+  { icon: "💬", title: "Friendly advice", text: "Ask us anything about feeding, tanks and keeping your fish happy." },
 ];
 
 export default function About() {
-  const bannerRef = useRef(null);
+  const [whatsappLink, setWhatsappLink] = useState(null);
+  const [fb, setFb] = useState({ name: "", message: "", anonymous: false });
+  const [sending, setSending] = useState(false);
+  const root = useRef(null);
 
+  // WhatsApp link comes from the backend .env (ADMIN_WHATSAPP_NUMBER)
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.from(".about-eyebrow", { opacity: 0, y: 16, duration: 0.5, ease: "power3.out" });
-      gsap.from(".about-heading", { opacity: 0, y: 24, duration: 0.6, ease: "power3.out", delay: 0.1 });
-      gsap.from(".about-subtext", { opacity: 0, y: 16, duration: 0.5, ease: "power3.out", delay: 0.25 });
-    }, bannerRef);
-
-    return () => ctx.revert();
+    api
+      .get("/contact/info")
+      .then((res) => setWhatsappLink(res.data.whatsappLink))
+      .catch(() => {});
   }, []);
 
+  // Small loops. They run again when the WhatsApp button appears.
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) return;
+
+      // The three icons float, one after another
+      gsap.to(".about-icon", {
+        y: -8,
+        duration: 1.6,
+        yoyo: true,
+        repeat: -1,
+        ease: "sine.inOut",
+        stagger: { each: 0.35, from: "start" },
+      });
+
+      // The WhatsApp button pops in, then breathes softly
+      if (whatsappLink) {
+        gsap.from(".wa-btn", { scale: 0.6, opacity: 0, duration: 0.8, ease: "back.out(2)" });
+        gsap.to(".wa-btn", { scale: 1.05, duration: 1.2, yoyo: true, repeat: -1, ease: "sine.inOut", delay: 1 });
+      }
+    },
+    { scope: root, dependencies: [whatsappLink] }
+  );
+
+  const sendFeedback = async (e) => {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await api.post("/feedback", {
+        // no name means "Anonymous" on the server
+        name: fb.anonymous ? undefined : fb.name.trim() || undefined,
+        message: fb.message.trim(),
+      });
+      toast.success("Thank you for your feedback!");
+      setFb({ name: "", message: "", anonymous: false });
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
-    <>
-      <Navbar />
-      <main>
-        {/* ---------------- Banner ---------------- */}
-        <section ref={bannerRef} className="bg-[var(--color-abyss)] py-16 text-[var(--color-sand)] md:py-20">
-          <div className="mx-auto max-w-3xl px-5 text-center md:px-8">
-            <span className="about-eyebrow text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-coral)]">
-              Our story
-            </span>
-            <h1 className="about-heading mt-4 text-4xl font-semibold leading-[1.1] md:text-5xl">
-              Built for farms. Trusted by buyers.
-            </h1>
-            <p className="about-subtext mt-5 text-base leading-relaxed text-[rgba(245,239,225,0.75)] md:text-lg">
-              AquaPulse connects independent aquaculture farms directly with buyers, so
-              healthy fish move from tank to doorstep with fewer hands — and less guesswork
-              — in between.
-            </p>
-          </div>
-        </section>
+    <div ref={root} className="page-container space-y-12">
+      {/* 1. Send a request or problem */}
+      <Reveal as="section" className="glass-panel p-6 sm:p-8">
+        <h1 className="section-title mb-2">Send us a request or problem</h1>
+        <p className="mb-6 text-white/60">Tell us what you need and our team will reply to you.</p>
+        <RequestForm endpoint="/requests" buttonText="Send request" />
+      </Reveal>
 
-        {/* ---------------- Pillars ---------------- */}
-        <section className="mx-auto max-w-6xl px-5 py-16 md:px-8">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {pillars.map(({ icon: Icon, title, body }) => (
-              <div
-                key={title}
-                className="rounded-2xl border border-[rgba(11,32,48,0.08)] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_35px_rgba(15,92,102,0.12)]"
-              >
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[rgba(255,107,74,0.12)] text-[var(--color-coral)]">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold text-[var(--color-ink)]">{title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-soft)]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------------- How it works (genuine sequence — numbered) ---------------- */}
-        <section className="bg-[rgba(15,92,102,0.05)] py-16">
-          <div className="mx-auto max-w-6xl px-5 md:px-8">
-            <div className="mb-10 max-w-xl">
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-reef)]">
-                From tank to doorstep
-              </span>
-              <h2 className="mt-2 text-3xl font-semibold text-[var(--color-ink)] md:text-4xl">
-                How it works
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {steps.map((step, i) => (
-                <div key={step.title}>
-                  <span className="font-data text-sm font-semibold text-[var(--color-coral)]">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <h3 className="mt-2 text-base font-semibold text-[var(--color-ink)]">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-ink-soft)]">{step.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ---------------- Stats band ---------------- */}
-        <section className="bg-[var(--color-abyss)] py-14 text-[var(--color-sand)]">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-5 text-center md:grid-cols-4 md:px-8">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="font-data text-3xl font-semibold text-[var(--color-seafoam)] md:text-4xl">
-                  {stat.value}
-                </p>
-                <p className="mt-1 text-xs uppercase tracking-[0.15em] text-[rgba(245,239,225,0.65)]">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------------- CTA ---------------- */}
-        <section className="mx-auto max-w-4xl px-5 py-16 text-center md:px-8">
-          <h2 className="text-3xl font-semibold text-[var(--color-ink)] md:text-4xl">
-            Ready to see what&rsquo;s in stock?
-          </h2>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[var(--color-ink-soft)]">
-            Browse the live catalog, or reach out if you&rsquo;re a farm looking to list.
+      {/* 2. Farm details */}
+      <section>
+        <Reveal>
+          <h2 className="section-title mb-4">About {FARM.name}</h2>
+          <p className="max-w-3xl text-white/80">
+            We are an ornamental fish farm in Sri Lanka. We sell a small selection of beautiful, healthy fish straight from our
+            farm to your home. Because we keep only a few types, we know each one well and can give you honest advice. Stock is
+            counted carefully, so what you see on the website is what we really have.
           </p>
-          <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link to="/" className="btn-primary text-[var(--color-abyss)]">
-              Browse the catalog
-            </Link>
-            <Link
-              to="/contact"
-              className="btn-outline border-[rgba(15,92,102,0.3)] text-[var(--color-reef)] hover:border-[var(--color-reef)]"
-            >
-              Partner your farm
-            </Link>
-          </div>
-        </section>
-      </main>
-      <Bubbole count={16} />
-    </>
+        </Reveal>
+
+        {/* The three cards appear one after another */}
+        <Reveal stagger={0.15} y={50} className="mt-8 grid gap-5 sm:grid-cols-3">
+          {highlights.map((h) => (
+            <div key={h.title} className="glass-card p-5">
+              <p className="about-icon inline-block text-3xl">{h.icon}</p>
+              <h3 className="mt-2 font-semibold">{h.title}</h3>
+              <p className="mt-1 text-sm text-white/70">{h.text}</p>
+            </div>
+          ))}
+        </Reveal>
+
+        {whatsappLink && (
+          <a
+            href={`${whatsappLink}?text=${encodeURIComponent("Hello! I have a question about your fish.")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="wa-btn btn-primary mt-8 !from-emerald-500 !to-emerald-400 px-8 py-3"
+          >
+            💬 Chat with us on WhatsApp
+          </a>
+        )}
+      </section>
+
+      {/* 3. Feedback */}
+      <Reveal as="section" className="glass-panel p-6 sm:p-8">
+        <h2 className="section-title mb-2">Share your feedback</h2>
+        <p className="mb-6 text-white/60">Your message will be shown on our Home page. You can stay anonymous.</p>
+
+        <form onSubmit={sendFeedback} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Your name"
+            value={fb.name}
+            onChange={(e) => setFb({ ...fb, name: e.target.value })}
+            disabled={fb.anonymous}
+            maxLength={50}
+            className="input-field disabled:opacity-40"
+          />
+          <label className="flex items-center gap-2 text-sm text-white/80">
+            <input type="checkbox" checked={fb.anonymous} onChange={(e) => setFb({ ...fb, anonymous: e.target.checked })} className="accent-aqua-400" />
+            Send anonymously
+          </label>
+          <textarea
+            placeholder="Write your feedback..."
+            rows={4}
+            value={fb.message}
+            onChange={(e) => setFb({ ...fb, message: e.target.value })}
+            maxLength={500}
+            className="input-field"
+            required
+          />
+          <button type="submit" disabled={sending} className="btn-primary px-8">
+            {sending ? "Sending..." : "Send feedback"}
+          </button>
+        </form>
+      </Reveal>
+    </div>
   );
 }
