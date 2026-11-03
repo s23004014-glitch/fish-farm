@@ -1,210 +1,82 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+/* Our ocean colors and font (this replaces tailwind.config.js) */
+@theme {
+  --color-navy-700: #0d2d5e;
+  --color-navy-800: #0a1f44;
+  --color-navy-900: #06122b;
 
-/* ------------------------------------------------------------------ */
-/* Design tokens — shared across every page of AquaPulse              */
-/* ------------------------------------------------------------------ */
-:root {
-  --color-abyss: #062a3b;        /* deep-sea teal-navy (dark sections) */
-  --color-reef: #0d6b75;         /* primary teal                       */
-  --color-reef-light: #1b8a94;
-  --color-coral: #f4623a;        /* accent                             */
-  --color-coral-light: #ff8560;
-  --color-sand: #e6f6f4;         /* light foam text on dark sections   */
-  --color-seafoam: #6fe0c8;      /* secondary accent / success         */
-  --color-ink: #0a2433;          /* body text on light backgrounds     */
-  --color-ink-soft: #4a6270;     /* muted text                         */
+  --color-ocean-500: #1366b0;
+  --color-ocean-600: #0b4f8a;
+  --color-ocean-700: #0a3d6b;
 
-  --font-display: 'Fraunces', ui-serif, serif;
-  --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --color-lagoon-400: #2ab5bf;
+  --color-lagoon-500: #0e8f9a;
+  --color-lagoon-600: #0b7480;
+
+  --color-aqua-300: #7ee8f7;
+  --color-aqua-400: #22d3ee;
+  --color-aqua-500: #06b6d4;
+
+  --color-coral-400: #ff8a6b;
+  --color-coral-500: #ff6b4a;
+  --color-coral-600: #f2502e;
+
+  --font-sans: "Poppins", system-ui, sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-sans text-white antialiased;
+    /* Ocean gradient background that stays while scrolling */
+    background: linear-gradient(180deg, #06122b 0%, #0a1f44 45%, #0b4f8a 100%) fixed;
+    min-height: 100vh;
+  }
+  /* Tailwind v4 shows the normal arrow on buttons. This brings back the hand cursor. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
-/* One site-wide background: soft ocean-mist gradient */
-body {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #eefaf8 0%, #d6f1ef 45%, #c2e6ee 100%) fixed;
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Gradient for every dark section (navbar, banners, stats, visual panels) */
-[class*="bg-[var(--color-abyss)]"] {
-  background-image: linear-gradient(135deg, #062a3b 0%, #0a4a5c 55%, #0d6b75 100%);
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: var(--font-display);
-}
-
-::selection {
-  background: var(--color-coral);
-  color: #fff;
-}
-
-:focus-visible {
-  outline: 2px solid var(--color-coral);
-  outline-offset: 2px;
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: #d6f1ef;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-reef);
-  border-radius: 999px;
-}
-
-/* ------------------------------------------------------------------ */
-/* Reusable component classes                                         */
-/* ------------------------------------------------------------------ */
 @layer components {
+  /* Liquid glass card (used for fish cards) */
+  .glass-card {
+    @apply rounded-2xl border border-white/20 bg-gradient-to-br from-white/20 to-white/5 backdrop-blur-xl
+      shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition duration-300
+      hover:-translate-y-1.5 hover:shadow-[0_16px_40px_rgba(34,211,238,0.25)];
+  }
+
+  /* Glass panel without the hover lift (forms, tables) */
+  .glass-panel {
+    @apply rounded-2xl border border-white/15 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl
+      shadow-[0_8px_32px_rgba(0,0,0,0.25)];
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full bg-[var(--color-coral)] px-5 py-2.5 text-sm font-semibold text-[var(--color-abyss)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--color-coral-light)] hover:shadow-[0_10px_25px_rgba(255,107,74,0.35)] active:translate-y-0;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-coral-500 to-coral-400
+      px-6 py-2.5 font-semibold text-white shadow-lg shadow-coral-500/30 transition duration-300
+      hover:scale-105 hover:shadow-coral-500/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center rounded-full border border-[rgba(245,239,225,0.3)] px-5 py-2.5 text-sm font-semibold text-[var(--color-sand)] transition-all duration-200 hover:border-[var(--color-sand)] hover:bg-[rgba(255,255,255,0.06)];
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-aqua-400/60 px-6 py-2.5
+      font-semibold text-aqua-400 transition duration-300 hover:bg-aqua-400/10 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .card-fish {
-    @apply relative flex flex-col overflow-hidden rounded-2xl border border-[rgba(11,32,48,0.08)] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_35px_rgba(15,92,102,0.15)];
-  }
-}
-
-@layer utilities {
-  .font-display {
-    font-family: var(--font-display);
-  }
-  .font-body {
-    font-family: var(--font-body);
-  }
-  .font-data {
-    font-family: var(--font-mono);
-  }
-  .text-shimmer {
-    background: linear-gradient(110deg, #7ef9ff 10%, #ffd9a0 35%, #ff9a7a 55%, #7ef9ff 90%);
-    background-size: 250% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shimmer 7s linear infinite;
+  .input-field {
+    @apply w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-white placeholder:text-white/50
+      outline-none backdrop-blur transition focus:border-aqua-400 focus:ring-2 focus:ring-aqua-400/40;
   }
 
-  .text-shimmer-coral {
-    background: linear-gradient(110deg, #ffb59a, #ff6b4a, #ffc46b, #ffb59a);
-    background-size: 250% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shimmer 6s linear infinite;
+  .section-title {
+    @apply bg-gradient-to-r from-white via-aqua-400 to-lagoon-500 bg-clip-text text-3xl font-bold text-transparent md:text-4xl;
   }
 
-  /* ----------------- glasss card */
-  .glass {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-  }
-
-  .tilt-card {
-    transform-style: preserve-3d;
-    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease;
-  }
-
-  .tilt-card:hover {
-    transform: perspective(900px) rotateX(6deg) rotateY(-8deg) translateY(-10px) scale(1.02);
-    box-shadow: 0 40px 80px -20px rgba(6, 10, 60, 0.65), 0 0 0 1px rgba(126, 249, 255, 0.25);
-  }
-  .bubble {
-    animation: bubble-rise 3.2s ease-in infinite;
-    border-radius: 9999px;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(27,138,148,0.18));
-    border: 1px solid rgba(27,138,148,0.35);
-    pointer-events: none;
-  }
-  
-  .glow-orb {
-      background: radial-gradient(circle, rgba(126,249,255,0.4), rgba(255,107,74,0.18) 55%, transparent 70%);
-      filter: blur(40px);
-      animation: pulseGlow 6s ease-in-out infinite;
-    }
-  
-  .bubbles {
-    position: absolute;
-    bottom: -60px;
-    border-radius: 9999px;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(126,249,255,0.12));
-    border: 1px solid rgba(255,255,255,0.25);
-    animation: rise linear infinite;
-    pointer-events: none;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* Ambient motion — pure CSS, always-on (respects reduced motion)     */
-/* ------------------------------------------------------------------ */
-@keyframes pulse-ring {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.7;
-  }
-  70% {
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.9);
-    opacity: 0;
-  }
-}
-.pulse-ring {
-  animation: pulse-ring 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes bubble-rise {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: translateY(-90px) scale(0.5);
-    opacity: 0;
-  }
-}
-
-@keyframes floaty {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-18px) rotate(2deg); }
-}
-
-@keyframes rise {
-  0% { transform: translateY(0) scale(0.6); opacity: 0; }
-  10% { opacity: 0.8; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(-110vh) scale(1.15); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+  .page-container {
+    @apply mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8;
   }
 }

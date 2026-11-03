@@ -1,260 +1,183 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { gsap } from "gsap";
-import { useGSAP } from "@gsap/react";
-import Navbar from "../components/Navbar";
-import { fishData } from "../data/fish";
-import heroFish from "../assets/hero.png"; // adjust path to wherever hero.png actually lives
-import Bubbole from "../components/Bubbole";
-import koiFish from "../assets/koi-fish.mp4";
+import { Link, useLocation } from "react-router-dom";
+import api, { getErrorMessage } from "../api/axios.js";
+import { gsap, ScrollTrigger, useGSAP, prefersReducedMotion } from "../lib/gsap.js";
+import SearchBar from "../components/SearchBar.jsx";
+import FishCard from "../components/FishCard.jsx";
+import FeedbackList from "../components/FeedbackList.jsx";
+import Reveal from "../components/Reveal.jsx";
+import Spinner from "../components/Spinner.jsx";
+import { FARM } from "../config.js";
 
-gsap.registerPlugin(useGSAP);
-/* ------------------------------------------------------------------ */
-/* Original fish illustration (no stock photos, animates cleanly)     */
-/* ------------------------------------------------------------------ */
-
-
-const badgeStyles = {
-  "In stock": "bg-[rgba(127,217,196,0.25)] text-[#0f5c4a]",
-  "Low stock": "bg-[rgba(255,107,74,0.15)] text-[var(--color-coral)]",
-  "Sold out": "bg-[rgba(11,32,48,0.06)] text-[var(--color-ink-soft)]",
-};
-
-function FishCard({ fish }) {
-  return (
-    <Link
-      to={`/listing/${fish.id}`}
-      className="card-fish group relative flex flex-col overflow-hidden rounded-2xl border border-white/30 bg-white/10 shadow-[0_8px_32px_rgba(15,92,102,0.15)] backdrop-blur-xl transition-all duration-500 [transform-style:preserve-3d] hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(15,92,102,0.3)] hover:[transform:perspective(1000px)_rotateX(3deg)_rotateY(-3deg)_translateY(-8px)] glass"
-    >
-      {/* subtle glass shine overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-60 " />
-
-      <div className="relative flex items-center justify-center bg-[rgba(7,27,43,0.04)]">
-        <img
-          src={fish.img}
-          alt={fish.name}
-          className="object-contain drop-shadow-lg transition-transform duration-500 group-hover:scale-110"
-        />
-      </div>
-
-      <div className="relative flex flex-1 flex-col gap-2 p-5">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="text-lg font-semibold text-[var(--color-seafoam)]">{fish.name}</h3>
-          </div>
-          <span
-            className={`whitespace-nowrap text-white rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-              badgeStyles[fish.stock]
-            }`}
-          >
-            {fish.stock}
-          </span>
-        </div>
-        <div className="mt-auto flex items-center justify-between pt-3">
-
-          <span className="font-data text-sm font-semibold text-white">
-            Rs {fish.price.toFixed(2)}
-          </span>
-          <span className="text-xs font-semibold text-[var(--color-coral)] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            View details →
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
+// Bubble sizes and positions (fixed values, so React renders the same every time)
+const BUBBLES = Array.from({ length: 14 }, (_, i) => ({
+  id: i,
+  size: 8 + ((i * 7) % 22),
+  left: 4 + ((i * 53) % 92),
+}));
 
 export default function Home() {
-  const [fish] = useState(fishData);
-  const [query, setQuery] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
+  const [fish, setFish] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const location = useLocation();
 
   const heroRef = useRef(null);
-  const fishWrapRef = useRef(null);
-  const fishBodyRef = useRef(null);
-  const cardsRef = useRef(null);
+  const videoWrapRef = useRef(null);
+  const contentRef = useRef(null);
 
-  useGSAP(() => {
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-    tl.from(".hero-eyebrow", { opacity: 0, y: 16, duration: 0.5 })
-      .from(".hero-heading", { opacity: 0, y: 24, duration: 0.6 }, "-=0.25")
-      .from(".hero-subtext", { opacity: 0, y: 16, duration: 0.5 }, "-=0.3")
-      .from(".hero-but", { opacity: 0, y: 16, duration: 0.5 }, "-=0.3")
-      .from(fishWrapRef.current, { opacity: 0, scale: 0.85, duration: 0.7 }, "-=0.5");
+  useEffect(() => {
+    api
+      .get("/fish")
+      .then((res) => setFish(res.data))
+      .catch((err) => setError(getErrorMessage(err)))
+      .finally(() => setLoading(false));
+  }, []);
 
-    gsap.to(fishBodyRef.current, {
-      y: -10,
-      duration: 2.6,
-      ease: "sine.inOut",
-      yoyo: true,
-      repeat: -1,
-    });
-  }, { scope: heroRef });
+  // The page gets taller after the fish load, so scroll positions must be measured again
+  useEffect(() => {
+    if (!loading) ScrollTrigger.refresh();
+  }, [loading]);
 
-  const handleFilter = (e) => {
-    e.preventDefault();
-    setAppliedQuery(query.trim());
-  };
+  // Hero animations
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) return;
+      const hero = heroRef.current;
 
-  const handleClear = () => {
-    setQuery("");
-    setAppliedQuery("");
-  };
+      // 1. Intro: video zooms out slowly, headline words rise, text and buttons fade in
+      gsap
+        .timeline({ defaults: { ease: "power3.out" } })
+        .fromTo(".hero-video", { scale: 1.18 }, { scale: 1, duration: 2.4, ease: "power2.out" }, 0)
+        .from(".hero-word", { yPercent: 110, opacity: 0, duration: 0.9, stagger: 0.12 }, 0.2)
+        .from(".hero-fade", { y: 24, opacity: 0, duration: 0.8, stagger: 0.12 }, "-=0.4");
 
-  const filteredFish = appliedQuery
-    ? fish.filter((f) => f.name.toLowerCase().includes(appliedQuery.toLowerCase()))
-    : fish;
+      // 2. Scrolling down: the video moves slower than the page, the text fades away
+      gsap.to(videoWrapRef.current, {
+        yPercent: 8,
+        ease: "none",
+        scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true },
+      });
+      gsap.to(contentRef.current, {
+        yPercent: -12,
+        opacity: 0.2,
+        ease: "none",
+        scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true },
+      });
 
-  // Also switched to useGSAP for the same StrictMode-safety
-  useGSAP(() => {
-    if (cardsRef.current) {
-      gsap.fromTo(
-        cardsRef.current.children,
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: "power2.out" }
-      );
-    }
-  }, { scope: cardsRef, dependencies: [filteredFish] });
+      // 3. Bubbles rise from the bottom, each one with its own speed and wobble
+      hero.querySelectorAll(".hero-bubble").forEach((bubble) => {
+        const duration = gsap.utils.random(7, 14);
+        gsap
+          .timeline({ repeat: -1, delay: gsap.utils.random(0, 8) })
+          .fromTo(bubble, { y: 0, opacity: 0 }, { opacity: 0.6, duration: duration * 0.15, ease: "none" }, 0)
+          .to(bubble, { y: () => -hero.offsetHeight, duration, ease: "none" }, 0)
+          .to(bubble, { x: gsap.utils.random(-30, 30), duration: duration / 2, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0)
+          .to(bubble, { opacity: 0, duration: duration * 0.2, ease: "none" }, duration * 0.8);
+      });
+
+      // 4. The small arrow at the bottom bounces
+      gsap.to(".hero-cue", { y: 10, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut" });
+    },
+    { scope: heroRef }
+  );
+
+  const scrollToFish = () => document.getElementById("fish")?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <>
-      <Navbar />
-      <main className="bg-[#0e3a52]">
-        {/* ---------------- Hero ---------------- */}
-        <section
-          ref={heroRef}
-          className="relative flex h-[85vh] max-h-[760px] min-h-[520px] items-center overflow-hidden"
-        >
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="absolute inset-0 h-full w-full object-cover"
-          >
-            <source src={koiFish} type="video/mp4" />
-          </video>
+    <div>
+      {/* 1. Hero with background video */}
+      <section
+        ref={heroRef}
+        className="relative flex h-screen min-h-[600px] items-center justify-center overflow-hidden bg-gradient-to-br from-navy-900 via-ocean-700 to-lagoon-600"
+      >
+        {/* The wrapper is taller than the hero so the parallax never shows an empty edge */}
+        <div ref={videoWrapRef} className="absolute inset-x-0 -top-[10%] h-[120%]">
+          <video className="hero-video h-full w-full object-cover" src="/hero-video.mp4" autoPlay muted loop playsInline />
+        </div>
 
-          {/* Darkens the left side (where the text sits) regardless of where
-              the koi is mid-loop, while keeping the video visible overall. */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(7,27,43,0.82) 0%, rgba(7,27,43,0.55) 45%, rgba(7,27,43,0.2) 75%, rgba(7,27,43,0.05) 100%)",
-            }}
-            aria-hidden="true"
-          />
+        {/* Dark overlay so the text is easy to read */}
+        <div className="absolute inset-0 bg-gradient-to-b from-navy-900/70 via-navy-900/40 to-navy-900" />
 
-          <div className="relative z-10 mx-auto w-full max-w-6xl px-5 md:px-8">
-            <div className="max-w-lg text-[var(--color-sand)]">
-              <span className="hero-eyebrow text-xs font-semibold uppercase tracking-[0.25em] text-[var(--color-coral)]">
-                Farm-direct aquatics
-              </span>
-              <h1 className="hero-heading mt-4 text-4xl font-semibold leading-[1.1] md:text-5xl lg:text-6xl">
-                buy <span className="text-[var(--color-coral)]">what you want.</span>
-              </h1>
-              <p className="hero-subtext mt-5 max-w-md text-base leading-relaxed text-[rgba(245,239,225,0.85)] md:text-lg">
-                Browse live inventory straight from trusted fish farms, watch stock update
-                the moment it changes, and get what you want ornerment fish.
-              </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#catalog" className="hero-cta btn-primary">
-                  Browse the catalog
-                </a>
-                <Link to="/auth" className="hero-cta btn-outline">
-                  Become a buyer
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ---------------- Filter bar ---------------- */}
-        <section className="relative z-10 mx-auto -mt-8 max-w-4xl px-5 md:-mt-14 md:px-8">
-          <form
-            onSubmit={handleFilter}
-            className="flex flex-col gap-3 rounded-2xl border border-[rgba(11,32,48,0.08)] bg-white p-4 shadow-[0_20px_40px_rgba(15,92,102,0.12)] sm:flex-row sm:items-center"
-          >
-            <label htmlFor="fish-search" className="sr-only">
-              Search fish by name
-            </label>
-            <input
-              id="fish-search"
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name, e.g. Betta"
-              className="w-full flex-1 rounded-xl border border-[rgba(11,32,48,0.12)] bg-[rgba(245,239,225,0.5)] px-4 py-2.5 text-sm text-[var(--color-ink)] outline-none transition-colors duration-200 focus:border-[var(--color-reef)]"
+        {/* Bubbles */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+          {BUBBLES.map((b) => (
+            <span
+              key={b.id}
+              className="hero-bubble absolute bottom-0 rounded-full border border-white/40 bg-white/10 opacity-0"
+              style={{ width: b.size, height: b.size, left: `${b.left}%` }}
             />
-            <div className="flex gap-2">
-              <button type="submit" className="btn-primary flex-1 sm:flex-none">
-                Filter
-              </button>
-              {appliedQuery && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className="rounded-full px-4 py-2.5 text-sm font-semibold text-[var(--color-ink-soft)] transition-colors duration-200 hover:text-[var(--color-coral)]"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </form>
-        </section>
+          ))}
+        </div>
 
-        {/* ---------------- Catalog grid ---------------- */}
-        <section id="catalog" className="bg-[#0e3a52]">
-          <div className="mx-auto max-w-6xl px-5 py-16 md:px-8">
-          <div className="mb-8 flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--color-seafoam)]">
-              Live inventory
+        <div ref={contentRef} className="relative z-10 mx-auto max-w-3xl px-4 text-center">
+          <h1 className="text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
+            <span className="inline-block overflow-hidden pb-2 align-bottom">
+              <span className="hero-word inline-block">Bring the</span>
+            </span>{" "}
+            <span className="inline-block overflow-hidden pb-2 align-bottom">
+              <span className="hero-word inline-block bg-gradient-to-r from-aqua-300 to-lagoon-400 bg-clip-text text-transparent">Ocean</span>
+            </span>{" "}
+            <span className="inline-block overflow-hidden pb-2 align-bottom">
+              <span className="hero-word inline-block">Home</span>
             </span>
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <h2 className="text-3xl font-semibold text-white md:text-4xl">
-                Fresh from the farm
-              </h2>
-              <p className="text-sm text-[var(--color-ink-soft)]">
-                {filteredFish.length} of {fish.length} fish shown
-              </p>
-            </div>
-          </div>
+          </h1>
 
-          {filteredFish.length > 0 ? (
-            <div
-              ref={cardsRef}
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-            >
-              {filteredFish.map((f) => (
-                <FishCard key={f.id} fish={f} />
+          <p className="hero-fade mx-auto mt-5 max-w-xl text-base text-white/80 sm:text-lg">
+            {FARM.tagline}. Healthy fish, safe delivery and friendly advice, straight from our farm.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <button onClick={scrollToFish} className="hero-fade btn-primary px-8 py-3 text-lg">
+              Shop Fish
+            </button>
+            <Link to="/about" className="hero-fade btn-outline px-8 py-3 text-lg">
+              About Us
+            </Link>
+          </div>
+        </div>
+
+        <div className="hero-fade absolute bottom-6 left-1/2 z-10 -translate-x-1/2 text-center text-xs tracking-widest text-white/60">
+          <p>SCROLL</p>
+          <p className="hero-cue text-lg">↓</p>
+        </div>
+      </section>
+
+      {/* 2. Search bar (live results, fuzzy) */}
+      <SearchBar fishList={fish} focusKey={location.state?.focusSearch} />
+
+      {/* 3. Fish cards (first 9). Each card animates by itself. */}
+      <section id="fish" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Reveal>
+          <h2 className="section-title mb-8 text-center">Our Fish</h2>
+        </Reveal>
+
+        {loading ? (
+          <Spinner text="Loading fish..." />
+        ) : error ? (
+          <p className="text-center text-red-300">{error}</p>
+        ) : fish.length === 0 ? (
+          <p className="text-center text-white/60">No fish available right now.</p>
+        ) : (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {fish.slice(0, 9).map((f) => (
+                <FishCard key={f._id} fish={f} />
               ))}
             </div>
-          ) : fish.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[rgba(11,32,48,0.15)] bg-[rgba(255,255,255,0.6)] px-6 py-14 text-center">
-              <p className="font-display text-lg font-semibold text-[var(--color-ink)]">The catalog is empty right now</p>
-              <p className="mt-2 text-sm text-[var(--color-ink-soft)]">Check back soon, or request new listings.</p>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-dashed border-[rgba(11,32,48,0.15)] bg-[rgba(255,255,255,0.6)] px-6 py-14 text-center">
-              <p className="font-display text-lg font-semibold text-[var(--color-ink)]">
-                No fish match &ldquo;{appliedQuery}&rdquo;
-              </p>
-              <p className="mt-2 text-sm text-[var(--color-ink-soft)]">
-                Try another name, or clear the filter to see the full catalog.
-              </p>
-              <button
-                type="button"
-                onClick={handleClear}
-                className="btn-outline mt-5 border-[rgba(15,92,102,0.3)] text-[var(--color-reef)] hover:border-[var(--color-reef)]"
-              >
-                Clear filter
-              </button>
-            </div>
-          )}
-        </div>
-        </section>
-      </main>
-    </>
+            {fish.length > 9 && (
+              <div className="mt-10 text-center">
+                <Link to="/fish" className="btn-primary px-8 py-3">
+                  View More
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      {/* 4. Feedback */}
+      <FeedbackList />
+    </div>
   );
 }
